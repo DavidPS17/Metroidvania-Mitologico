@@ -10,6 +10,7 @@ public class PlayerMovement : MonoBehaviour
     public BoxCollider2D headCollider;
     public CircleCollider2D footCollider;
     public LineRenderer hook;
+    public SpriteRenderer sprite;
 
     [Header("Shared variables")]
     float horizontalMove = 0f;
@@ -25,6 +26,7 @@ public class PlayerMovement : MonoBehaviour
     bool isHook = false;
     bool isShootMagic = false;
     bool isShootBow = false;
+    bool isDamage = false;
 
     [Header("Inputs")]
     float horizontalAxis;
@@ -47,6 +49,7 @@ public class PlayerMovement : MonoBehaviour
     public LayerMask whatIsWall;
     public LayerMask whatIsWater;
     public LayerMask whatIsGrapplable;
+    public LayerMask whatIsDamage;
     public Transform groundCheck;
     public Transform ceilingCheck;
     public Transform wallCheck;
@@ -71,9 +74,10 @@ public class PlayerMovement : MonoBehaviour
     public int coins;
     public int level;
 
-    public int damage;
-    public int defense;
-    public int magic;
+    public int meleeDamage;
+    public int magicDamage;
+    public int meleeDefense;
+    public int magicDefense;
 
     [Header("Move")]
     public float runSpeed;
@@ -130,6 +134,9 @@ public class PlayerMovement : MonoBehaviour
     public float delayShootBow;
     public float counterDelayShootBow;
 
+    [Header("Damage")]
+    public float timeDamage;
+
     #region MonoBehaviour methods
     void Awake()
     {
@@ -140,6 +147,7 @@ public class PlayerMovement : MonoBehaviour
         crouchDisableCollider = GetComponent<BoxCollider2D>();
         footCollider = GetComponent<CircleCollider2D>();
         hook = GetComponent<LineRenderer>();
+        sprite = GetComponent<SpriteRenderer>();
 
         // Events
         if (OnLandEvent == null)
@@ -157,6 +165,11 @@ public class PlayerMovement : MonoBehaviour
         jumpsLeft = maxJumps;
 
         counterDelayShootBow = delayShootBow;
+
+        meleeDamage = level * 10;
+        magicDamage = level * 10;
+        meleeDefense = level * 10;
+        magicDefense = level * 10;
     }
 
     void Update()
@@ -604,27 +617,73 @@ public class PlayerMovement : MonoBehaviour
     {
         animator.SetBool("IsCrouching", isCrouching);
     }
+
+    public void OnDamage()
+    {
+        health -= 10;
+        sprite.color = Color.red;
+        isDamage = true;
+
+        Invoke("OnDamageOut", timeDamage);
+    }
+    public void OnDamageOut()
+    {
+        isDamage = false;
+        sprite.color = Color.white;
+    }
     #endregion
 
     #region Checks
     void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.tag == "Enemy")
+        if (collision.gameObject.tag == "Enemy" && !isDamage)
         {
-            health -= 10;
+            OnDamage();
         }
     }
 
     void OnTriggerEnter2D(Collider2D collision)
     {
-        isSwim = true;
-        rigid.gravityScale = gravityScale;
+        if (collision.gameObject.layer == 4)
+        {
+            isSwim = true;
+            rigid.gravityScale = gravityScale;
+        }
+        if (collision.gameObject.layer == 11 && !isDamage)
+        {
+            OnDamage();
+        }
+
+        if (collision.gameObject.tag == "Coin")
+        {
+            coins++;
+            Destroy(collision.gameObject);
+        }
+        if (collision.gameObject.tag == "Heart")
+        {
+            health += 20;
+            Destroy(collision.gameObject);
+        }
+    }
+
+    void OnTriggerStay2D(Collider2D collision)
+    {
+        if (collision.gameObject.layer == 11)
+        {
+            if (!isDamage)
+            {
+                OnDamage();
+            }
+        }
     }
 
     void OnTriggerExit2D(Collider2D collision)
     {
-        isSwim = false;
-        rigid.gravityScale = 0;
+        if (collision.gameObject.layer == 4)
+        {
+            isSwim = false;
+            rigid.gravityScale = 0;
+        }
     }
     #endregion
 }
