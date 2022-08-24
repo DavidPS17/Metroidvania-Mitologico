@@ -9,7 +9,7 @@ public class EnemigoPersigue : MonoBehaviour
     public float rango;
     public float maxRango;
     public bool persiguiendo;
-    
+    public bool miraDerecha;
     public float velocidadMovimiento;
 
     SpriteRenderer sprite;
@@ -18,6 +18,7 @@ public class EnemigoPersigue : MonoBehaviour
 
     void Start()
     {
+        miraDerecha = true;
         rb2d = GetComponent<Rigidbody2D>();
         sprite = GetComponent<SpriteRenderer>();
        
@@ -50,20 +51,29 @@ public class EnemigoPersigue : MonoBehaviour
     void PerseguirJugador()
     {
         sprite.color = Color.blue;
-        if (transform.position.x < player.position.x)
+        if (transform.position.x < player.position.x && !miraDerecha)
         {
             rb2d.velocity = new Vector2(velocidadMovimiento, 0f);
-            //Flip();
+            Flip();
         }
-        else if(transform.position.x > player.position.x )
+        else if(transform.position.x > player.position.x && miraDerecha)
         {
             rb2d.velocity = new Vector2(-velocidadMovimiento, 0f);
-            //Flip();
+            Flip();
+        }
+        else if (!miraDerecha)
+        {
+            rb2d.velocity = new Vector2(-velocidadMovimiento, 0f);
+        }
+        else if (miraDerecha)
+        {
+            rb2d.velocity = new Vector2(velocidadMovimiento, 0f);
         }
     }
 
     private void Flip()
     {
+        miraDerecha = !miraDerecha;
         transform.localScale = new Vector3(transform.localScale.x * -1, transform.localScale.y, transform.localScale.z);
     }
 
