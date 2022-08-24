@@ -21,8 +21,6 @@ public class EnemigoPersigue : MonoBehaviour
         miraDerecha = true;
         rb2d = GetComponent<Rigidbody2D>();
         sprite = GetComponent<SpriteRenderer>();
-       
-        
     }
 
     // Update is called once per frame

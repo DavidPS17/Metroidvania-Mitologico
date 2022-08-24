@@ -6,12 +6,32 @@ public class Enemy : MonoBehaviour
 {
     [Header("Components")]
     Rigidbody2D rigid;
+    SpriteRenderer sprite;
 
     public enum Type { Minion, Archer, Brute, Boss }
     public Type type;
 
     public enum MagicState { Normal, Fire, Water, Electric, Grass }
     public MagicState magicState = MagicState.Normal;
+
+    [Header("AI General")]
+    public Transform target;
+    public bool targetFind;
+    public bool facingRight = true;
+
+    [Header("AI Minion")]
+    public float minRange;
+    public float maxRange;
+
+    [Header("AI Archer")]
+    public GameObject bow;
+    public GameObject arrow;
+    public float arrowForce;
+    public Transform shotPoint;
+
+    public float range;
+    public float timerShot = 0.0f;
+    public float shotDelay;
 
     [Header("Magic variables")]
     public float timeMagicAffect1 = 0.0f;
@@ -34,13 +54,32 @@ public class Enemy : MonoBehaviour
     public bool isFireGrass = false;
     public bool isElectricGrass = false;
 
-
     void Awake()
     {
         rigid = GetComponent<Rigidbody2D>();
+        sprite = GetComponent<SpriteRenderer>();
     }
 
     void Update()
+    {
+        MagicManager();
+
+        if (type == Type.Minion)
+        {
+            AIMinion();
+        }
+        if (type == Type.Archer)
+        {
+            AIArcher();
+        }
+
+        if (health <= 0)
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    void MagicManager()
     {
         if (MagicAffect1)
         {
@@ -68,11 +107,95 @@ public class Enemy : MonoBehaviour
                 timeMagicAffect2 = 0.0f;
             }
         }
+    }
 
-        if (health <= 0)
+    void AIMinion()
+    {
+        float targetDist = Vector2.Distance(transform.position, target.position);
+
+        if (targetDist < minRange)
         {
-            Destroy(gameObject);
+            targetFind = true;
+            FollowTarget();
         }
+        if (targetDist < maxRange && targetFind == true)
+        {
+            FollowTarget();
+        }
+        else
+        {
+            targetFind = false;
+            UnfollowTarget();
+        }
+    }
+    void FollowTarget()
+    {
+        sprite.color = Color.blue;
+
+        if (transform.position.x < target.position.x && !facingRight)
+        {
+            rigid.velocity = new Vector2(speed, 0f);
+            Flip();
+        }
+        else if (transform.position.x > target.position.x && facingRight)
+        {
+            rigid.velocity = new Vector2(-speed, 0f);
+            Flip();
+        }
+        else if (!facingRight)
+        {
+            rigid.velocity = new Vector2(-speed, 0f);
+        }
+        else if (facingRight)
+        {
+            rigid.velocity = new Vector2(speed, 0f);
+        }
+    }
+    public void Flip()
+    {
+        facingRight = !facingRight;
+        transform.localScale = new Vector3(transform.localScale.x * -1, transform.localScale.y, transform.localScale.z);
+    }
+    void UnfollowTarget()
+    {
+        sprite.color = Color.red;
+        rigid.velocity = new Vector2(0.0f, 0.0f);
+    }
+
+    void AIArcher()
+    {
+        float targetDist = Vector2.Distance(transform.position, target.position);
+
+        if (targetDist <= range)
+        {
+            sprite.color = Color.blue;
+
+            Vector2 bowPosition = bow.transform.position;
+            Vector2 targetPosition = target.position;
+            Vector2 direction = targetPosition - bowPosition;
+            if (facingRight)
+            {
+                bow.transform.right = direction;
+            }
+            else
+            {
+                bow.transform.right = -direction;
+            }
+
+            if (timerShot >= shotDelay)
+            {
+                timerShot = 0.0f;
+
+                GameObject newArrow = Instantiate(arrow, shotPoint.position, shotPoint.rotation);
+                newArrow.GetComponent<Rigidbody2D>().velocity = direction.normalized * arrowForce;
+            }
+        }
+        else
+        {
+            sprite.color = Color.red;
+        }
+
+        timerShot += Time.deltaTime;
     }
 
     public void waterFire()
