@@ -34,6 +34,7 @@ public class Enemy : MonoBehaviour
     public bool isFireGrass = false;
     public bool isElectricGrass = false;
 
+
     void Awake()
     {
         rigid = GetComponent<Rigidbody2D>();
