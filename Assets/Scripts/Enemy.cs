@@ -68,6 +68,11 @@ public class Enemy : MonoBehaviour
                 timeMagicAffect2 = 0.0f;
             }
         }
+
+        if (health <= 0)
+        {
+            Destroy(gameObject);
+        }
     }
 
     public void waterFire()
