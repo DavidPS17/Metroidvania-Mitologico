@@ -16,17 +16,17 @@ public class PlayerMovement : MonoBehaviour
     float horizontalMove = 0f;
 
     [Header("Bool Actions")]
-    bool isMove = false;
-    bool isJump = false;
-    bool isCrouch = false;
-    bool isDash = false;
-    bool isPlane = false;
-    bool isClimb = false;
-    bool isSwim = false;
-    bool isHook = false;
-    bool isShootMagic = false;
-    bool isShootBow = false;
-    bool isDamage = false;
+    public bool isMove = false;
+    public bool isJump = false;
+    public bool isCrouch = false;
+    public bool isDash = false;
+    public bool isPlane = false;
+    public bool isClimb = false;
+    public bool isSwim = false;
+    public bool isHook = false;
+    public bool isShootMagic = false;
+    public bool isShootBow = false;
+    public bool isDamage = false;
 
     [Header("Inputs")]
     float horizontalAxis;
@@ -137,6 +137,9 @@ public class PlayerMovement : MonoBehaviour
     [Header("Damage")]
     public float timeDamage;
 
+    [Header("CheckPoints")]
+    public Vector2 SpawnPoint;
+
     #region MonoBehaviour methods
     void Awake()
     {
@@ -184,6 +187,7 @@ public class PlayerMovement : MonoBehaviour
         Swim();
         ShootMagic();
         ShootBow();
+        Checks();
     }
 
     void FixedUpdate()
@@ -324,7 +328,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void Jump()
     {
-        if (jumpDown && jumpsLeft > 0 && !isCrouch && !isDash && !isClimb)
+        if (jumpDown && jumpsLeft > 0 && !isCrouch && !isDash && !isClimb && !isPlane)
         {
             jumpsLeft = Mathf.Max(0, jumpsLeft - 1);
             animator.SetBool("IsJumping", true);
@@ -339,7 +343,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void Crouch()
     {
-        if (crouchDown && !isJump && !isDash && !isPlane && !isPlane)
+        if (crouchDown && !isJump && !isDash && !isPlane)
         {
             isCrouch = true;
         }
@@ -387,10 +391,13 @@ public class PlayerMovement : MonoBehaviour
                 rigid.velocity = new Vector2(rigid.velocity.x, 0.0f);
             }
 
-            if (planePressed && !grounded)
+            if (planePressed)
             {
                 isPlane = true;
-                rigid.gravityScale = planeGravityReduction;
+                if (!grounded)
+                {
+                    rigid.gravityScale = planeGravityReduction;
+                }
             }
             else
             {
@@ -414,6 +421,8 @@ public class PlayerMovement : MonoBehaviour
 
             Vector3 targetVelocity = new Vector2(horizontalSpeed * 10f, verticalSpeed * 10f);
             rigid.velocity = Vector3.SmoothDamp(rigid.velocity, targetVelocity, ref velocityRef, timeMoveSmoothing);
+
+            jumpsLeft = maxJumps;
         }
         else if (!isPlane)
         {
@@ -443,6 +452,9 @@ public class PlayerMovement : MonoBehaviour
 
             if (hit.collider != null)
             {
+                rigid.velocity = Vector2.zero;
+                jumpsLeft = maxJumps;
+
                 isHook = true;
                 target = hit.point;
                 hook.enabled = true;
@@ -465,6 +477,9 @@ public class PlayerMovement : MonoBehaviour
                 hookRetracting = false;
                 isHook = false;
                 hook.enabled = false;
+
+                rigid.gravityScale = 0;
+                jumpsLeft = maxJumps;
             }
         }
     }
@@ -603,6 +618,15 @@ public class PlayerMovement : MonoBehaviour
         comboCount++;
         comboCount = comboCount % maxComboCount;
     }
+
+    void Checks()
+    {
+        if (health <= 0)
+        {
+            transform.position = SpawnPoint;
+            health = 100;
+        }
+    }
     #endregion
 
     #region Events
@@ -640,6 +664,11 @@ public class PlayerMovement : MonoBehaviour
         {
             OnDamage();
         }
+
+        if (collision.gameObject.layer == 12)
+        {
+            health = -10;
+        }
     }
 
     void OnTriggerEnter2D(Collider2D collision)
@@ -662,6 +691,11 @@ public class PlayerMovement : MonoBehaviour
         if (collision.gameObject.tag == "Heart")
         {
             health += 20;
+            Destroy(collision.gameObject);
+        }
+        if (collision.gameObject.tag == "CheckPoint")
+        {
+            SpawnPoint = collision.transform.position;
             Destroy(collision.gameObject);
         }
     }
