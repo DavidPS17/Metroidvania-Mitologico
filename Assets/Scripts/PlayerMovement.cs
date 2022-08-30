@@ -97,6 +97,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Dash")]
     public float timeDash;
     public float forceDash;
+    public bool canDash = true;
 
     [Header("Plane")]
     [Range(0, 1)] public float planeGravityReduction;
@@ -355,8 +356,10 @@ public class PlayerMovement : MonoBehaviour
 
     public void Dash()
     {
-        if (DashDown && !isDash && !isCrouch)
+        if (DashDown && !isDash && !isCrouch && canDash)
         {
+            canDash = false;
+
             int face = 0;
             if (facingRight)
             {
@@ -668,6 +671,14 @@ public class PlayerMovement : MonoBehaviour
         if (collision.gameObject.layer == 12)
         {
             health = -10;
+        }
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        if (collision.gameObject.layer == 7)
+        {
+            canDash = true;
         }
     }
 
