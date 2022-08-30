@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class PlayerMovement : MonoBehaviour
+public class Player : MonoBehaviour
 {
     [Header("Components")]
     public Animator animator;
@@ -141,6 +141,10 @@ public class PlayerMovement : MonoBehaviour
     [Header("CheckPoints")]
     public Vector2 SpawnPoint;
 
+    [Header("Melee")]
+    public bool isAttacking;
+    public bool isChargingAttack;
+
     #region MonoBehaviour methods
     void Awake()
     {
@@ -189,6 +193,7 @@ public class PlayerMovement : MonoBehaviour
         ShootMagic();
         ShootBow();
         Checks();
+        Melee();
     }
 
     void FixedUpdate()
@@ -629,6 +634,27 @@ public class PlayerMovement : MonoBehaviour
             transform.position = SpawnPoint;
             health = 100;
         }
+    }
+
+    void Melee()
+    {
+        if (Input.GetKey("e") && !isAttacking)
+        {
+            isAttacking = true;
+            animator.SetTrigger("DoAttack1");
+        }
+
+        if (Input.GetKey("q") && !isAttacking)
+        {
+            animator.SetTrigger("DoCharge1");
+            isAttacking = true;
+        }
+    }
+
+    public void Finish_Anim()
+    {
+        isAttacking = false;
+        isChargingAttack = false;
     }
     #endregion
 
