@@ -134,21 +134,21 @@ public class Enemy : MonoBehaviour
 
         if (transform.position.x < target.position.x && !facingRight)
         {
-            rigid.velocity = new Vector2(speed, 0f);
+            rigid.velocity = new Vector2(speed, rigid.velocity.y);
             Flip();
         }
         else if (transform.position.x > target.position.x && facingRight)
         {
-            rigid.velocity = new Vector2(-speed, 0f);
+            rigid.velocity = new Vector2(-speed, rigid.velocity.y);
             Flip();
         }
         else if (!facingRight)
         {
-            rigid.velocity = new Vector2(-speed, 0f);
+            rigid.velocity = new Vector2(-speed, rigid.velocity.y);
         }
         else if (facingRight)
         {
-            rigid.velocity = new Vector2(speed, 0f);
+            rigid.velocity = new Vector2(speed, rigid.velocity.y);
         }
     }
     public void Flip()
